@@ -1,30 +1,40 @@
 import numpy as np
 import cv2 as cv
-
-from config import TIME_STEPS, FRAME_WIDTH, FRAME_HEIGHT, DOT_COLOR, DOT_RADIUS, FPS, GRID_HEIGHT, GRID_WIDTH
+import matplotlib as mpl
+from config import TIME_STEPS, FRAME_WIDTH, FRAME_HEIGHT, DOT_COLOR, DOT_RADIUS, FPS, GRID_HEIGHT, GRID_WIDTH, NUM_POINTS
 from vector_grid import create_grid
 from perlin_noise import get_2d_perlin_noise, get_n_perlin_points
 
 
 def main():
-    output_filename = 'drifting_random_gradient.mp4'
+    
     fps = FPS
     ndim = 2
     grid = create_grid(GRID_WIDTH, GRID_HEIGHT, ndim)
     frame_height = FRAME_HEIGHT
     frame_width = FRAME_WIDTH
     frames = []
+    perlin_frames = []
 
-    frame = get_frame(frame_width, frame_height, grid)
+    frame = get_gradient_frame(frame_width, frame_height, grid)
     cv.imwrite('output_frame.png', frame)
 
     for _ in range(TIME_STEPS):
-        new_frame = get_frame(frame_width, frame_height, grid)
+        new_frame = get_gradient_frame(frame_width, frame_height, grid)
+        perlin_points = get_n_perlin_points(NUM_POINTS, grid)
+        new_perlin_frame = get_perlin_frame(frame_width, frame_height, perlin_points)
+        perlin_frames.append(new_perlin_frame)
         frames.append(new_frame)
-        grid += 0.1 * create_grid(GRID_WIDTH, GRID_HEIGHT, ndim)
+        grid += 0.3 * create_grid(GRID_WIDTH, GRID_HEIGHT, ndim)
+
     
+    output_filename = 'drifting_random_gradient.mp4'
     get_video(output_filename, fps, frame_width, frame_height, frames)
+    output_filename = '2d_perlin_noise.mp4'
+    get_video(output_filename, fps, frame_width, frame_height, perlin_frames)
     print(f'Video saved as {output_filename}')
+
+
 
 def get_video(output_filename, fps, frame_width, frame_height, frames):
     fourcc = cv.VideoWriter_fourcc(*'mp4v')
@@ -34,7 +44,7 @@ def get_video(output_filename, fps, frame_width, frame_height, frames):
     out.release()
 
 
-def get_frame(frame_width, frame_height, grid):
+def get_gradient_frame(frame_width, frame_height, grid):
     frame = np.ones((frame_width, frame_height, 3), dtype=np.uint8) * 255
     grid_width = grid.shape[0]
     grid_height = grid.shape[1]
@@ -62,6 +72,35 @@ def get_frame(frame_width, frame_height, grid):
 
     return frame
 
+
+def get_perlin_frame(frame_width, frame_height, perlin_points):
+    frame = np.ones((frame_width, frame_height, 3), dtype=np.uint8) * 255
+    
+    x_coords, y_coords, noise_values = perlin_points
+    
+    min_value = np.min(noise_values)
+    max_value = np.max(noise_values)
+
+    grid_width = np.max(x_coords)
+    grid_height = np.max(y_coords)
+    cmap = mpl.colormaps['viridis']
+
+    for i, noise_value in enumerate(noise_values):
+        # Normalize the noise value to [0, 1]
+        normalized_value = (noise_value - min_value) / (max_value - min_value)
+
+        # Get the RGBA color from the colormap
+        rgba = cmap(normalized_value)
+
+        # Convert RGBA to BGR and scale to 0-255
+        bgr_color = tuple(int(c * 255) for c in rgba[:3][::-1])  # Reverse RGB to BGR
+        x = x_coords[i]
+        y = y_coords[i]
+        
+        # Draw the circle with the colormap color
+        cv.circle(frame, (int(x * frame_width // grid_width), int(y * frame_height // grid_height)), 2 * DOT_RADIUS, bgr_color, -1)
+
+    return frame
 
 # def draw_line()
 

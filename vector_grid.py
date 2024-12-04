@@ -2,6 +2,7 @@ import numpy as np
 from config import GRID_WIDTH, GRID_HEIGHT
 import matplotlib.pyplot as plt
 
+
 def main():
     grid = create_grid(GRID_WIDTH, GRID_HEIGHT, 2)
     points = grid.reshape(-1, 2)
@@ -17,9 +18,9 @@ def main():
 
 def create_grid(width, height, ndim=1):
     grid_shape = (width, height, ndim)
-    grid = (np.random.default_rng().random(size=(grid_shape))*2)-1
+    grid = (np.random.default_rng().random(size=(grid_shape)) * 2) - 1
     return grid
+
 
 if __name__ == "__main__":
     main()
-

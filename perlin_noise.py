@@ -4,33 +4,58 @@ from config import GRID_HEIGHT, GRID_WIDTH, NUM_POINTS
 
 
 def main():
-    grid = create_grid(GRID_WIDTH, GRID_HEIGHT)
-    noise = get_2d_perlin_noise(grid, 1, 1)
-    print(noise)
+    grid = create_grid(GRID_WIDTH, GRID_HEIGHT, 2)
+    noise = get_2d_perlin_noise(grid, 3, 4)
+    print("noise", noise)
+    num_points = 9
+    perlin_noise_grid = get_n_perlin_points(num_points, grid)
 
-    perlin_noise_grid = get_n_perlin_points(9, grid)
-    print("x_coords", perlin_noise_grid[0], "\n")
-    print("y_coords", perlin_noise_grid[1], "\n")
-    print("values", perlin_noise_grid[2], "\n")
+    for i, x_y_magnitude in enumerate(perlin_noise_grid):
+        x = x_y_magnitude[0]
+        y = x_y_magnitude[1]
+        z = x_y_magnitude[2]
+        # print(i, f'  x: {x:.3f}   ',f'y: {y:.3f}   ', f'dot prod.: {z:.3f}')
+    force_vector = get_force_at_point(x, y, grid)
+    print(force_vector)
+
+
+def get_force_at_point(x, y, grid):
+    width = len(grid[0])
+    height = len(grid)
+    x0 = int(x)
+    y0 = int(y)
+    x1 = x0 + 1
+    y1 = y0 + 1
+
+    # top/bottom, left/right of grid square
+    vector_tl = grid[x0][y0]
+    vector_tr = grid[x1][y0]
+    vector_bl = grid[x0][y1]
+    vector_br = grid[x1][y1]
+    print(vector_tl, vector_tr, vector_bl, vector_br)
+
+    x_frac = x - x0
+    y_frac = y - y0
+
+    interp_top = vector_tl + x_frac * (vector_tr - vector_tl)
+    interp_bottom = vector_bl + x_frac * (vector_br - vector_bl)
+
+    result_vector = interp_top + y_frac * (interp_bottom - interp_top)
+    return result_vector
 
 
 def get_n_perlin_points(n, grid):
     grid_width, grid_height = grid.shape[0:2]
 
-    x_coords = []
-    y_coords = []
-    noise_values = []
-
+    points = []
     for _ in range(n):
         x = np.random.random() * (grid_width - 1)
         y = np.random.random() * (grid_height - 1)
         noise_value = get_2d_perlin_noise(grid, x, y)
 
-        x_coords.append(x)
-        y_coords.append(y)
-        noise_values.append(noise_value)
+        points.append((x, y, noise_value))
 
-    return x_coords, y_coords, noise_values
+    return points
 
 
 def get_2d_perlin_noise(gradient_grid, x, y):

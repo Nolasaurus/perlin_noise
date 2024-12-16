@@ -17,7 +17,6 @@ from perlin_noise import get_n_perlin_points
 
 
 def main():
-
     fps = FPS
     ndim = 2
     grid = create_grid(GRID_WIDTH, GRID_HEIGHT, ndim)
@@ -91,7 +90,9 @@ def get_gradient_frame(frame_width, frame_height, grid):
 def get_perlin_frame(frame_width, frame_height, perlin_points):
     frame = np.ones((frame_width, frame_height, 3), dtype=np.uint8) * 255
 
-    x_coords, y_coords, noise_values = perlin_points
+    x_coords = [point[0] for point in perlin_points]
+    y_coords = [point[1] for point in perlin_points]
+    noise_values = [point[2] for point in perlin_points]
 
     min_value = np.min(noise_values)
     max_value = np.max(noise_values)

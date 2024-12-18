@@ -28,7 +28,7 @@ def plot_grid_vectors(grid):
     print(f"Scatter plot saved as {output_image}")
 
 
-def draw_grid_vectors(grid):
+def draw_grid_vectors(grid, plot_filename):
     grid = get_unit_vectors(grid)
     x_components = grid[:, :, 0]
     y_components = grid[:, :, 1]
@@ -51,9 +51,9 @@ def draw_grid_vectors(grid):
     plt.grid(
         True, which="both", linestyle="--", linewidth=0.5
     )  # Gridlines on all integers
-    plt.savefig("grid_vectors.png")
+    plt.savefig(plot_filename)
 
-    print("plot saved")
+    print(f"plot saved as {plot_filename}")
 
 
 def get_unit_vectors(grid):
